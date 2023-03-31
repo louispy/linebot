@@ -31,3 +31,5 @@ go.work
 bin
 build
 Files
+serverless.*.yml
+!serverless.example.yml
