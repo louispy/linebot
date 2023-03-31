@@ -19,9 +19,15 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
 # Go workspace file
 go.work
 
 # End of https://www.toptal.com/developers/gitignore/api/go
+.env
+.vscode
+.serverless
+bin
+build
+Files
