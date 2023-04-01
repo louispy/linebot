@@ -1,6 +1,8 @@
 # LINEBOT
 
-Only echoes LINE messages at the moment
+## Commands
+/search <query>
+searches the web
 
 ## STACK
 Go, Line Bot SDK, AWS Lambda + API Gateway
