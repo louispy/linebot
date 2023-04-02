@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,8 @@ import (
 	"os"
 
 	"github.com/line/line-bot-sdk-go/linebot"
+	"github.com/louispy/linebot/internal/constants"
+	"go.opentelemetry.io/otel"
 )
 
 type searchResult struct {
@@ -17,7 +20,10 @@ type searchResult struct {
 	Url     string `json:"AbstractURL"`
 }
 
-func (c Command) Search(event *linebot.Event, query string) {
+func (c Command) Search(ctx context.Context, event *linebot.Event, query string) {
+	ctx, span := otel.Tracer(constants.Usecase).Start(ctx, constants.CommandSearch)
+	defer span.End()
+
 	url := fmt.Sprintf("%s&q=%s", os.Getenv("SEARCH_API_BASE_URL"), query)
 
 	resp, err := http.Get(url)
@@ -55,7 +61,8 @@ func (c Command) Search(event *linebot.Event, query string) {
 		}
 	}
 
-	if _, err := c.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message)).Do(); err != nil {
+	_, err = c.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message)).WithContext(ctx).Do()
+	if err != nil {
 		log.Println(err)
 	}
 }

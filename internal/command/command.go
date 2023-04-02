@@ -1,12 +1,15 @@
 package command
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/line/line-bot-sdk-go/linebot"
+	"github.com/louispy/linebot/internal/constants"
+	"go.opentelemetry.io/otel"
 )
 
 type LineWebhookRequest struct {
@@ -28,7 +31,10 @@ func NewCommand(o CommandOpts) Command {
 	}
 }
 
-func (c Command) Callback(req *events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+func (c Command) Callback(ctx context.Context, req *events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+	ctx, span := otel.Tracer(constants.Usecase).Start(ctx, constants.Callback)
+	defer span.End()
+
 	var lineReq LineWebhookRequest
 
 	err := json.Unmarshal([]byte(req.Body), &lineReq)
@@ -49,10 +55,10 @@ func (c Command) Callback(req *events.APIGatewayProxyRequest) (*events.APIGatewa
 					switch cmd {
 					case "search":
 						if len(args) > 0 {
-							c.Search(event, strings.Join(args, " "))
+							c.Search(ctx, event, strings.Join(args, " "))
 						}
 					default:
-						if _, err := c.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Unrecognized Command :(")).Do(); err != nil {
+						if _, err := c.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Unrecognized Command :(")).WithContext(ctx).Do(); err != nil {
 							log.Println(err)
 						}
 

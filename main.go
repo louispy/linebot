@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
-	"github.com/louispy/linebot/command"
+	"github.com/louispy/linebot/internal/command"
 )
 
 func main() {
@@ -28,5 +29,5 @@ func main() {
 		Bot: bot,
 	})
 
-	lambda.Start(cmd.Callback)
+	lambda.StartWithOptions(cmd.Callback, lambda.WithContext(context.Background()))
 }
