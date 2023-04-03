@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	cmd "github.com/louispy/linebot/internal/command"
+	cmd "github.com/louispy/linebot/internal/adapters"
 )
 
 type CommandApp struct {

@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/louispy/linebot/internal/app"
-	"github.com/louispy/linebot/internal/command"
+	"github.com/louispy/linebot/internal/usecases/command"
 )
 
 func main() {
