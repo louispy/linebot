@@ -53,7 +53,7 @@ func (c LineCommand) Callback(ctx context.Context, req *events.APIGatewayProxyRe
 					cmd := args[0][1:]
 					args = args[1:]
 					switch cmd {
-					case "search":
+					case "search", "s":
 						if len(args) > 0 {
 							c.Search(ctx, event, strings.Join(args, " "))
 						}
