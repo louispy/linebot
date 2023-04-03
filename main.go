@@ -1,13 +1,12 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
+	"github.com/louispy/linebot/internal/app"
 	"github.com/louispy/linebot/internal/command"
 )
 
@@ -25,9 +24,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cmd := command.NewCommand(command.CommandOpts{
+	cmd := command.NewLineCommand(command.CommandOpts{
 		Bot: bot,
 	})
 
-	lambda.StartWithOptions(cmd.Callback, lambda.WithContext(context.Background()))
+	commandApp := app.NewCommandApp(app.CommandAppOpts{
+		Command: cmd,
+	})
+
+	commandApp.Run()
 }

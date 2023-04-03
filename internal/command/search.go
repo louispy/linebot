@@ -20,7 +20,7 @@ type searchResult struct {
 	Url     string `json:"AbstractURL"`
 }
 
-func (c Command) Search(ctx context.Context, event *linebot.Event, query string) {
+func (c LineCommand) Search(ctx context.Context, event *linebot.Event, query string) {
 	ctx, span := otel.Tracer(constants.Usecase).Start(ctx, constants.CommandSearch)
 	defer span.End()
 
