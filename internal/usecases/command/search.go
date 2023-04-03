@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -15,22 +16,39 @@ import (
 )
 
 type searchResult struct {
-	Heading string `json:"Heading"`
-	Text    string `json:"AbstractText"`
-	Url     string `json:"AbstractURL"`
+	Heading string `json:"title"`
+	Text    string `json:"description"`
+	Url     string `json:"url"`
+}
+
+type searchResponse struct {
+	Query   string         `json:"query"`
+	Results []searchResult `json:"results"`
 }
 
 func (c LineCommand) Search(ctx context.Context, event *linebot.Event, query string) {
 	ctx, span := otel.Tracer(constants.Usecase).Start(ctx, constants.CommandSearch)
 	defer span.End()
 
-	url := fmt.Sprintf("%s&q=%s", os.Getenv("SEARCH_API_BASE_URL"), query)
+	host := os.Getenv("SEARCH_API_BASE_URL")
+	apiKey := os.Getenv("RAPID_API_KEY")
 
-	resp, err := http.Get(url)
+	url := fmt.Sprintf("https://%s?q=%s", host, url.QueryEscape(query))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
+	req.Header.Add("X-RapidAPI-Key", apiKey)
+	req.Header.Add("X-RapidAPI-Host", host)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer resp.Body.Close()
 
 	resBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -38,8 +56,8 @@ func (c LineCommand) Search(ctx context.Context, event *linebot.Event, query str
 		return
 	}
 
-	var result searchResult
-	err = json.Unmarshal(resBody, &result)
+	var response searchResponse
+	err = json.Unmarshal(resBody, &response)
 	if err != nil {
 		log.Println(err)
 		return
@@ -47,12 +65,13 @@ func (c LineCommand) Search(ctx context.Context, event *linebot.Event, query str
 
 	message := "Sorry! No search result..."
 
-	if result.Heading != "" {
+	if len(response.Results) > 0 {
+		result := response.Results[0]
 		message = result.Heading
 		if result.Text != "" {
 			text := result.Text
-			if len(text) > 100 {
-				text = text[0:100] + "..."
+			if len(text) > 150 {
+				text = text[0:150] + "..."
 			}
 			message += fmt.Sprintf("\n%s", text)
 		}
