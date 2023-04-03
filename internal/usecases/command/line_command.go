@@ -17,17 +17,27 @@ type LineWebhookRequest struct {
 	Events      []*linebot.Event `json:"events"`
 }
 
+type handlers = map[string]func(context.Context, *linebot.Event, []string)
+
 type LineCommand struct {
-	bot *linebot.Client
+	bot      *linebot.Client
+	handlers handlers
 }
 
 type CommandOpts struct {
 	Bot *linebot.Client
 }
 
-func NewLineCommand(o CommandOpts) LineCommand {
-	return LineCommand{
+func NewLineCommand(o CommandOpts) *LineCommand {
+	return &LineCommand{
 		bot: o.Bot,
+	}
+}
+
+func (c *LineCommand) LoadHandlers() {
+	c.handlers = handlers{
+		"search": c.Search,
+		"s":      c.Search,
 	}
 }
 
@@ -52,16 +62,12 @@ func (c LineCommand) Callback(ctx context.Context, req *events.APIGatewayProxyRe
 					args := strings.Split(msg, " ")
 					cmd := args[0][1:]
 					args = args[1:]
-					switch cmd {
-					case "search", "s":
-						if len(args) > 0 {
-							c.Search(ctx, event, strings.Join(args, " "))
-						}
-					default:
-						if _, err := c.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Unrecognized Command :(")).WithContext(ctx).Do(); err != nil {
-							log.Println(err)
-						}
-
+					if handler, ok := c.handlers[cmd]; ok {
+						handler(ctx, event, args)
+						continue
+					}
+					if _, err := c.bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Unrecognized Command :(")).WithContext(ctx).Do(); err != nil {
+						log.Println(err)
 					}
 				}
 			}

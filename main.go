@@ -27,6 +27,7 @@ func main() {
 	cmd := command.NewLineCommand(command.CommandOpts{
 		Bot: bot,
 	})
+	cmd.LoadHandlers()
 
 	commandApp := app.NewCommandApp(app.CommandAppOpts{
 		Command: cmd,

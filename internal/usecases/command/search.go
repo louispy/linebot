@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/louispy/linebot/internal/constants"
@@ -26,13 +27,14 @@ type searchResponse struct {
 	Results []searchResult `json:"results"`
 }
 
-func (c LineCommand) Search(ctx context.Context, event *linebot.Event, query string) {
+func (c LineCommand) Search(ctx context.Context, event *linebot.Event, args []string) {
 	ctx, span := otel.Tracer(constants.Usecase).Start(ctx, constants.CommandSearch)
 	defer span.End()
 
 	host := os.Getenv("SEARCH_API_BASE_URL")
 	apiKey := os.Getenv("RAPID_API_KEY")
 
+	query := strings.Join(args, " ")
 	url := fmt.Sprintf("https://%s?q=%s", host, url.QueryEscape(query))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
